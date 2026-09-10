@@ -1,0 +1,48 @@
+{
+  "name": "EXTRICATE - Driver & Field Mobile",
+  "short_name": "EXTRICATE",
+  "description": "Offline-first field logistics and tactical driver application with dead-reckoning GPS tracking, hazard reporting, photo evidence capture, and real-time HQ sync.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090e16",
+  "theme_color": "#090e16",
+  "categories": ["logistics", "navigation", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Driver Cab HUD",
+      "short_name": "Driver HUD",
+      "description": "Launch directly into tactical driver cab navigation view",
+      "url": "/?view=mobile",
+      "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Report Hazard",
+      "short_name": "Report Hazard",
+      "description": "File emergency incident or road hazard report",
+      "url": "/?tab=report",
+      "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="128" fill="#090e16"/>
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="#171c24" stroke="#252a33" stroke-width="8"/>
+  <rect x="96" y="96" width="320" height="320" rx="48" fill="#10b981"/>
+  <text x="256" y="320" font-family="'Chivo', 'JetBrains Mono', sans-serif" font-weight="900" font-size="200" fill="#003824" text-anchor="middle" letter-spacing="-8">EX</text>
+</svg>

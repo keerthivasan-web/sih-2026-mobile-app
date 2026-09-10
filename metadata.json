@@ -1,0 +1,6 @@
+{
+  "name": "EXTRICATE - Driver & Field Mobile",
+  "description": "Offline-first field logistics and tactical driver application with dead-reckoning GPS tracking, hazard reporting, photo evidence capture, and real-time HQ sync.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
