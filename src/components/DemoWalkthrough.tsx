@@ -40,7 +40,7 @@ export const DemoWalkthrough: React.FC = () => {
       desc: 'Review #MED-2045-RX Emergency Medicines Manifest',
       actionText: 'INSPECT MANIFEST',
       action: () => {
-        setActiveTab('shipments');
+        setActiveTab('home');
         showToast('Step 2: Active shipment #MED-2045-RX (Critical Priority)', 'info', 'inventory_2');
         setCurrentStep(3);
       },

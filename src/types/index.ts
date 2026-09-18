@@ -113,5 +113,5 @@ export interface RouteMetrics {
   surfaceType: string;
   maxGradePercent: number;
   clearanceMeters: number;
-  activeRoute: 'PRIMARY' | 'ALTERNATIVE';
+  activeRoute: 'PRIMARY' | 'ALTERNATIVE' | 'WEST_RIDGE';
 }

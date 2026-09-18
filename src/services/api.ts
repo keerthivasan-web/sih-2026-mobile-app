@@ -223,21 +223,39 @@ class ApiService {
     return alert ? [alert] : [];
   }
 
-  async acceptReroute(routeId: string): Promise<{ success: boolean; metrics: RouteMetrics }> {
+  async acceptReroute(
+    routeId: string = 'RT-NH108',
+    targetRoute: 'PRIMARY' | 'ALTERNATIVE' | 'WEST_RIDGE' = 'ALTERNATIVE'
+  ): Promise<{ success: boolean; metrics: RouteMetrics }> {
     const currentMetrics = StorageService.getRouteMetrics();
+
+    let dist = 195;
+    let eta = '4h 28m';
+    let riskLabel = 'Bypassed NH-108 via East Pass Corridor (Safe Bypass)';
+
+    if (targetRoute === 'PRIMARY') {
+      dist = 180;
+      eta = '4h 10m';
+      riskLabel = 'NH-108 Valley Corridor (Primary Route)';
+    } else if (targetRoute === 'WEST_RIDGE') {
+      dist = 210;
+      eta = '4h 45m';
+      riskLabel = 'Western Ridge Highway (All-Weather High Elevation)';
+    }
+
     const updatedMetrics: RouteMetrics = {
       ...currentMetrics,
-      activeRoute: 'ALTERNATIVE',
-      currentDistanceKm: currentMetrics.altDistanceKm,
-      currentEta: '4h 38m',
-      currentRisk: 'OPEN',
-      currentRiskLabel: 'Bypassed NH-108 via East Pass Corridor (Tar & Clear)',
+      activeRoute: targetRoute,
+      currentDistanceKm: dist,
+      currentEta: eta,
+      currentRisk: targetRoute === 'PRIMARY' && currentMetrics.currentRisk === 'BLOCKED' ? 'BLOCKED' : 'OPEN',
+      currentRiskLabel: riskLabel,
     };
     StorageService.saveRouteMetrics(updatedMetrics);
 
-    // Deactivate alert since driver rerouted
+    // Deactivate alert if switching away from blocked primary route
     const alert = StorageService.getActiveAlert();
-    if (alert) {
+    if (alert && targetRoute !== 'PRIMARY') {
       StorageService.saveActiveAlert({ ...alert, active: false });
     }
 
@@ -246,7 +264,7 @@ class ApiService {
         await fetch(`${API_BASE_URL}/reroute/accept`, {
           method: 'POST',
           headers: this.getHeaders(),
-          body: JSON.stringify({ routeId, alternative: 'EAST_PASS_BYPASS' }),
+          body: JSON.stringify({ routeId, alternative: targetRoute }),
         });
       }
     } catch {

@@ -12,7 +12,7 @@ import { StorageService } from '../services/storage';
 import { api } from '../services/api';
 import { translations, SupportedLanguage, TranslationStrings } from '../services/i18n';
 
-export type NavTab = 'home' | 'route' | 'report' | 'shipments' | 'profile';
+export type NavTab = 'home' | 'route' | 'report' | 'profile';
 export type ViewMode = 'mobile' | 'dashboard' | 'split';
 
 interface AppContextType {
@@ -33,6 +33,12 @@ interface AppContextType {
   shipments: Shipment[];
   activeShipment: Shipment;
   setActiveShipmentId: (id: string) => void;
+
+  fromLocation: string;
+  setFromLocation: (loc: string) => void;
+  toLocation: string;
+  setToLocation: (loc: string) => void;
+  swapLocations: () => void;
 
   routeMetrics: RouteMetrics;
   incidents: IncidentReport[];
@@ -63,7 +69,7 @@ interface AppContextType {
 
   activeAlert: RiskAlert | null;
   dismissAlert: () => void;
-  acceptReroute: () => Promise<void>;
+  acceptReroute: (targetRoute?: 'PRIMARY' | 'ALTERNATIVE' | 'WEST_RIDGE') => Promise<void>;
   isRerouteModalOpen: boolean;
   setIsRerouteModalOpen: (open: boolean) => void;
 
@@ -112,6 +118,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [driver, setDriver] = useState<DriverProfile>(() => StorageService.getDriver());
   const [shipments, setShipments] = useState<Shipment[]>(() => StorageService.getShipments());
   const [activeShipmentId, setActiveShipmentIdState] = useState<string>(() => StorageService.getActiveShipment().id);
+  const [fromLocation, setFromLocation] = useState<string>('Guwahati');
+  const [toLocation, setToLocation] = useState<string>('Aizawl');
+
+  const swapLocations = useCallback(() => {
+    setFromLocation((prevFrom) => {
+      setToLocation(prevFrom);
+      return toLocation;
+    });
+  }, [toLocation]);
 
   const [routeMetrics, setRouteMetrics] = useState<RouteMetrics>(() => StorageService.getRouteMetrics());
   const [incidents, setIncidents] = useState<IncidentReport[]>(() => StorageService.getIncidents());
@@ -259,12 +274,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isSyncing, demoStep, refreshStateFromStorage, showToast]);
 
-  // Accept Reroute
-  const acceptReroute = useCallback(async () => {
-    const res = await api.acceptReroute('RT-NH108');
+  // Accept Reroute / Switch Route
+  const acceptReroute = useCallback(async (targetRoute: 'PRIMARY' | 'ALTERNATIVE' | 'WEST_RIDGE' = 'ALTERNATIVE') => {
+    const res = await api.acceptReroute('RT-NH108', targetRoute);
     setRouteMetrics(res.metrics);
-    setActiveAlert(null);
-    showToast('HUD UPDATED: Navigating via East Pass Bypass (158 KM)', 'success', 'alt_route');
+    if (targetRoute !== 'PRIMARY') {
+      setActiveAlert(null);
+    }
+    const routeNames = {
+      PRIMARY: 'NH-108 Primary Valley Route',
+      ALTERNATIVE: 'East Pass Bypass Corridor',
+      WEST_RIDGE: 'Western Ridge Highway',
+    };
+    showToast(`HUD UPDATED: Navigating via ${routeNames[targetRoute]} (${res.metrics.currentDistanceKm} KM)`, 'success', 'alt_route');
     if (demoStep === 7) setDemoStep(8);
   }, [demoStep, showToast]);
 
@@ -311,10 +333,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await api.submitIncident(newReport);
       refreshStateFromStorage();
 
+      // AUTO-SUGGEST REROUTE LOGIC UPON REPORT SUBMISSION
+      const alert: RiskAlert = {
+        id: `ALT-${Date.now()}`,
+        active: true,
+        title: `ROUTE RISK DETECTED: ${reportData.categoryLabel}`,
+        cause: `${reportData.categoryLabel} reported at corridor sector. ${reportData.description}`,
+        currentRisk: 'BLOCKED',
+        alternativeRisk: 'OPEN',
+        location: `KM ${Math.floor(65 + Math.random() * 20)} Corridor`,
+        impactDelayMins: 45,
+        timestamp: 'JUST NOW',
+        alternativeRouteName: 'East Pass Bypass Corridor',
+        alternativeDistanceKm: 158,
+      };
+      StorageService.saveActiveAlert(alert);
+      setActiveAlert(alert);
+
+      const m = StorageService.getRouteMetrics();
+      m.currentRisk = 'BLOCKED';
+      m.currentRiskLabel = `${reportData.categoryLabel} reported on primary route`;
+      StorageService.saveRouteMetrics(m);
+      setRouteMetrics({ ...m });
+
       if (isOffline) {
-        showToast(`SAVED TO OFFLINE BUFFER (${incidentId}). Sync pending.`, 'warning', 'save');
+        showToast(`SAVED OFFLINE (${incidentId}). Auto-suggested safe route!`, 'warning', 'save');
       } else {
-        showToast(`INCIDENT REPORTED (${incidentId}) & TRANSMITTED TO HQ`, 'success', 'check_circle');
+        showToast(`INCIDENT REPORTED: Auto-suggested safer route via East Pass Bypass!`, 'success', 'alt_route');
       }
 
       if (demoStep === 9 || demoStep === 10) {
@@ -436,6 +481,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         shipments,
         activeShipment,
         setActiveShipmentId,
+        fromLocation,
+        setFromLocation,
+        toLocation,
+        setToLocation,
+        swapLocations,
         routeMetrics,
         incidents,
         gpsBuffer,

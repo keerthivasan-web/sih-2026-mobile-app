@@ -21,147 +21,123 @@ export const RouteScreen: React.FC = () => {
     showToast,
     isRerouteModalOpen,
     setIsRerouteModalOpen,
+    fromLocation,
+    toLocation,
+    activeAlert,
     t,
   } = useApp();
 
-  const [mapLayer, setMapLayer] = useState<'topo' | 'satellite'>('topo');
   const [selectedHazard, setSelectedHazard] = useState<SelectedHazard | null>(null);
-
   const isRerouted = routeMetrics.activeRoute === 'ALTERNATIVE';
 
-  const hazards: SelectedHazard[] = [
-    {
-      id: 'h1',
-      name: 'ROAD BLOCKED',
-      emoji: '🚧',
-      location: 'KM 74',
-      explanation: 'Landslide reported at KM 74. Mud slurry and boulders across both lanes.',
-      severity: 'BLOCKED',
-    },
-    {
-      id: 'h2',
-      name: 'FLOOD',
-      emoji: '🌊',
-      location: 'KM 82',
-      explanation: 'Flash flood runoff overflowing culvert at KM 82. Water depth ~45 cm.',
-      severity: 'HIGH',
-    },
-    {
-      id: 'h3',
-      name: 'LANDSLIDE',
-      emoji: '⛰',
-      location: 'KM 96',
-      explanation: 'Active slope instability on mountain bend at KM 96. Debris falling intermittently.',
-      severity: 'BLOCKED',
-    },
-  ];
+  const handleRouteSelectOnMap = (routeType: 'PRIMARY' | 'ALTERNATIVE' | 'WEST_RIDGE') => {
+    acceptReroute(routeType);
+  };
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto py-2 gap-3 pb-28 select-none font-sans">
-      {/* 1. Header Route Info Card */}
-      <div className="px-4">
-        <div className="w-full bg-[#1b2028] rounded-xl p-3.5 border border-[#252a33] shadow-md flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-mono text-[#bbcabf] uppercase tracking-wider font-bold">
-              {t.yourRoute}
-            </span>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-2xl font-extrabold text-white font-mono">
-                {isRerouted ? '195 km' : '180 km'}
-              </span>
-              <span className="text-base font-extrabold text-[#4edea3] font-mono">
-                {isRerouted ? '4h 28m' : '4h 10m'}
-              </span>
-            </div>
-            <span className="text-[11px] font-mono text-[#bbcabf]">
-              {isRerouted ? 'Corridor: East Pass Bypass' : 'Corridor: NH-108 Valley'}
-            </span>
-          </div>
+    <div className="flex flex-col w-full max-w-md mx-auto select-none font-sans relative pb-28 min-h-[calc(100vh-60px)]">
+      {/* 1. FLOATING TOP SEARCH / DESTINATION HEADER OVER MAP */}
+      <div className="absolute top-3 inset-x-3 z-20 flex items-center gap-2">
+        <button
+          onClick={() => setActiveTab('home')}
+          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-lg border border-indigo-50 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        </button>
 
-          <div className="flex flex-col items-end gap-1">
-            <span
-              className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold uppercase ${
-                isRerouted
-                  ? 'bg-[#10b981]/20 text-[#4edea3] border border-[#10b981]/40'
-                  : 'bg-[#ff5449]/20 text-[#ffb4ab] border border-[#ff5449]/40 animate-pulse'
-              }`}
-            >
-              {isRerouted ? '🟢 LOW RISK' : '🔴 HIGH RISK'}
-            </span>
-            <span className="text-[10px] font-mono text-[#bbcabf]">
-              Corridor ±25km
-            </span>
+        {/* Search / Destination Input Bar */}
+        <div className="flex-1 bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-indigo-50/80 px-3.5 py-2 flex items-center justify-between gap-2 text-slate-800">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider">{t.destination}:</span>
+            <span className="text-xs font-black text-slate-900 truncate">{toLocation} ({routeMetrics.currentDistanceKm} km)</span>
           </div>
+          <span className="material-symbols-outlined text-[20px] text-slate-400">search</span>
         </div>
+
+        {/* Bell Icon */}
+        <button
+          onClick={() => setActiveTab('profile')}
+          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-lg border border-indigo-50 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer relative"
+        >
+          <span className="material-symbols-outlined text-[20px]">notifications</span>
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500" />
+        </button>
       </div>
 
-      {/* 2. Color Code Road Legend Strip */}
-      <div className="px-4">
-        <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-[#171c24] rounded-xl border border-[#252a33] text-[10px] font-mono text-center">
-          <div className={`p-1 rounded flex items-center justify-center gap-1 ${isRerouted ? 'bg-[#10b981]/20 text-[#4edea3] font-bold' : 'text-[#bbcabf]'}`}>
-            <span>🟢</span>
-            <span>Normal</span>
-          </div>
-          <div className="p-1 rounded flex items-center justify-center gap-1 text-[#bbcabf]">
-            <span>🟡</span>
-            <span>Moderate</span>
-          </div>
-          <div className={`p-1 rounded flex items-center justify-center gap-1 ${!isRerouted ? 'bg-[#ec6a06]/20 text-[#ffb690] font-bold' : 'text-[#bbcabf]'}`}>
-            <span>🟠</span>
-            <span>High Risk</span>
-          </div>
-          <div className="p-1 rounded flex items-center justify-center gap-1 text-[#bbcabf]">
-            <span>🔴</span>
-            <span>Blocked</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. OpenStreetMap Live View */}
-      <div className="px-4">
+      {/* 2. FULL-SCREEN INTERACTIVE MAP WITH DIRECT POLYLINE CLICK REROUTING */}
+      <div className="relative w-full h-[380px]">
         <OpenStreetMap
-          height="340px"
+          height="380px"
           isRerouted={isRerouted}
+          activeRoute={routeMetrics.activeRoute}
           incidents={[
-            { id: 'h1', latitude: 27.170, longitude: 88.324, categoryLabel: 'ROAD BLOCKED', roadLocation: 'NH-108 KM 74', description: 'Mudslide & boulders' },
-            { id: 'h2', latitude: 27.185, longitude: 88.330, categoryLabel: 'FLOOD HAZARD', roadLocation: 'Culvert 14B', description: 'Culvert flash flood' }
+            {
+              id: 'h1',
+              latitude: 27.170,
+              longitude: 88.324,
+              categoryLabel: t.roadBlocked.toUpperCase(),
+              roadLocation: 'KM 74',
+              description: 'Landslide reported ahead.',
+            },
           ]}
           currentGps={currentGps}
-          onMarkerClick={(h) => setSelectedHazard({
-            id: h.id,
-            name: h.categoryLabel || 'HAZARD',
-            emoji: '🚧',
-            location: h.roadLocation || 'KM 74',
-            explanation: h.description || 'Active hazard on route corridor.',
-            severity: 'BLOCKED'
-          })}
+          onRouteSelect={handleRouteSelectOnMap}
+          onMarkerClick={(h) =>
+            setSelectedHazard({
+              id: h.id,
+              name: h.categoryLabel || t.roadBlocked.toUpperCase(),
+              emoji: '🚧',
+              location: h.roadLocation || 'KM 74',
+              explanation: h.description || 'Landslide reported ahead.',
+              severity: 'BLOCKED',
+            })
+          }
         />
+
+        {/* Floating Map Action Buttons */}
+        <div className="absolute bottom-6 left-3 z-10 flex flex-col gap-2">
+          <button
+            onClick={() => showToast('Route saved to favorites', 'success')}
+            className="w-10 h-10 rounded-full bg-white text-rose-500 flex items-center justify-center shadow-lg border border-slate-100 hover:scale-105 transition-transform cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">favorite</span>
+          </button>
+          <button
+            onClick={() => showToast('Route shared with Command HQ', 'info')}
+            className="w-10 h-10 rounded-full bg-white text-indigo-600 flex items-center justify-center shadow-lg border border-slate-100 hover:scale-105 transition-transform cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">share</span>
+          </button>
+        </div>
+
+        <div className="absolute bottom-6 right-3 z-10">
+          <button
+            onClick={() => showToast('GPS Re-centered on Vehicle', 'info')}
+            className="w-11 h-11 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[22px]">my_location</span>
+          </button>
+        </div>
       </div>
 
-      {/* 4. Tap on Hazard Explanation Box */}
+      {/* 3. Hazard Details Popup */}
       {selectedHazard && (
-        <div className="px-4">
-          <div className="bg-[#1b2028] p-3.5 rounded-xl border-2 border-[#ec6a06] shadow-xl flex items-start justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
+        <div className="px-3 -mt-4 z-20">
+          <div className="bg-rose-50 border-2 border-rose-300 p-3.5 rounded-2xl shadow-xl flex items-start justify-between gap-3 animate-in zoom-in-95">
             <div className="flex items-start gap-2.5">
               <span className="text-2xl mt-0.5">{selectedHazard.emoji}</span>
               <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-mono font-extrabold text-white uppercase">
-                    {selectedHazard.name} ({selectedHazard.location})
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded bg-[#ff5449]/20 text-[#ffb4ab] text-[9px] font-mono font-bold">
-                    {selectedHazard.severity}
-                  </span>
-                </div>
-                <p className="text-[13px] text-[#dee2ee] mt-1 leading-snug">
+                <span className="text-sm font-black text-rose-900 uppercase">
+                  {selectedHazard.name} ({selectedHazard.location})
+                </span>
+                <p className="text-xs font-semibold text-rose-800 mt-0.5">
                   "{selectedHazard.explanation}"
                 </p>
               </div>
             </div>
-
             <button
               onClick={() => setSelectedHazard(null)}
-              className="w-7 h-7 rounded bg-[#090e16] text-[#bbcabf] hover:text-white flex items-center justify-center shrink-0"
+              className="text-slate-400 hover:text-slate-700 text-sm font-bold"
             >
               ✕
             </button>
@@ -169,40 +145,105 @@ export const RouteScreen: React.FC = () => {
         </div>
       )}
 
-      {/* 5. Route Action Buttons (REQUEST REROUTE / VIEW ALTERNATIVE / ACCEPT REROUTE) */}
-      <div className="px-4 flex flex-col gap-2.5 mt-1">
-        {/* VIEW ALTERNATIVE / REROUTE BUTTON */}
-        <button
-          onClick={() => setIsRerouteModalOpen(true)}
-          className="w-full h-15 bg-[#10b981] hover:bg-[#4edea3] text-[#002113] rounded-xl font-sans font-extrabold text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-all cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[24px]">alt_route</span>
-          <span>{isRerouted ? 'VIEW ACTIVE BYPASS ROUTE' : 'VIEW SAFER ALTERNATIVE ROUTE'}</span>
-        </button>
+      {/* 4. Auto-Suggest Banner if incident was reported */}
+      {activeAlert && (
+        <div className="px-4 -mt-2 z-20">
+          <div className="bg-indigo-600 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between gap-2 animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🚨</span>
+              <div className="flex flex-col">
+                <span className="text-xs font-black uppercase tracking-wider">{t.autoSuggestedRoute}</span>
+                <span className="text-[11px] font-medium text-white/90">East Pass Bypass Corridor (+14 mins)</span>
+              </div>
+            </div>
+            <button
+              onClick={() => acceptReroute()}
+              className="px-3 py-1.5 rounded-xl bg-white text-indigo-700 text-xs font-black uppercase shadow cursor-pointer hover:bg-indigo-50"
+            >
+              {t.acceptSaferRoute}
+            </button>
+          </div>
+        </div>
+      )}
 
-        {/* Secondary Row: [REQUEST REROUTE] and [REPORT CONDITION] */}
-        <div className="grid grid-cols-2 gap-2">
+      {/* 5. CURVED BOTTOM SHEET CARD matching sample image */}
+      <div className="bg-white rounded-t-[2.5rem] shadow-[0_-12px_40px_rgba(0,0,0,0.12)] p-5 border-t border-indigo-50 flex flex-col gap-4 -mt-4 relative z-10">
+        {/* Drag Pill indicator */}
+        <div className="w-12 h-1.5 rounded-full bg-slate-200 mx-auto -mt-1" />
+
+        {/* Mode Summary Strip */}
+        <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-100/60 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-indigo-600 text-[18px]">directions_walk</span>
+            <span className="px-2 py-0.5 rounded-xl bg-indigo-600 text-white font-black">🚚 MED-123</span>
+          </div>
+
+          <div className="flex items-center gap-3 font-bold text-slate-700">
+            <span>{t.eta}: <strong className="text-indigo-950 font-black">{isRerouted ? '4h 28m' : '4h 10m'}</strong></span>
+            <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[11px]">{t.priority}: {t.critical}</span>
+          </div>
+        </div>
+
+        {/* Vertical Route Timeline */}
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3 text-xs">
+          {/* Timeline Item 1: Start Location */}
+          <div className="flex items-start gap-3">
+            <span className="w-3 h-3 rounded-full bg-indigo-600 mt-0.5 shrink-0 shadow-sm" />
+            <div className="flex-1 flex justify-between items-center">
+              <span className="font-extrabold text-slate-900">{fromLocation} ({t.fromLocation})</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">6:55 pm</span>
+            </div>
+          </div>
+
+          <div className="border-l-2 border-dashed border-indigo-300 ml-1.5 -my-1 h-4" />
+
+          {/* Timeline Item 2: Midpoint Sector */}
+          <div className="flex items-start gap-3">
+            <span className="w-3 h-3 rounded-full bg-indigo-400 mt-0.5 shrink-0" />
+            <div className="flex-1 flex justify-between items-center text-slate-600 font-medium">
+              <span>Sector 3 Corridor</span>
+              <span className="text-[11px] font-mono">Departure: 7:00</span>
+            </div>
+          </div>
+
+          <div className="border-l-2 border-dashed border-indigo-300 ml-1.5 -my-1 h-4" />
+
+          {/* Timeline Item 3: Destination */}
+          <div className="flex items-start gap-3">
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-indigo-600 bg-white mt-0.5 shrink-0" />
+            <div className="flex-1 flex justify-between items-center">
+              <span className="font-extrabold text-indigo-700">{toLocation} ({t.destination})</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">7:35 pm</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Click map hint */}
+        <p className="text-[11px] font-semibold text-indigo-600 bg-indigo-50/40 p-2.5 rounded-xl border border-indigo-100/40 text-center">
+          💡 {t.clickMapToReroute}
+        </p>
+
+        {/* Primary Action Buttons */}
+        <div className="flex flex-col gap-2.5 pt-1">
           <button
-            onClick={() => {
-              setIsRerouteModalOpen(true);
-              showToast('Opening route comparison evaluation...', 'info', 'alt_route');
+            onClick={async () => {
+              await acceptReroute();
+              showToast(t.routeUpdated, 'success');
             }}
-            className="h-13 bg-[#252a33] hover:bg-[#30353e] text-[#dee2ee] text-[12px] font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1.5 border border-[#3c4a42] active:scale-98 transition-all"
+            className="w-full h-15 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px] text-[#4edea3]">
-              route
-            </span>
-            <span>REQUEST REROUTE</span>
+            <span className="material-symbols-outlined text-[24px]">alt_route</span>
+            <span>{t.acceptSaferRoute}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('report')}
-            className="h-13 bg-[#252a33] hover:bg-[#30353e] text-[#dee2ee] text-[12px] font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1.5 border border-[#3c4a42] active:scale-98 transition-all"
+            className="w-full h-12 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-slate-300 active:scale-98 transition-all cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px] text-[#ffb95f]">
+            <span className="material-symbols-outlined text-[18px] text-amber-600">
               warning
             </span>
-            <span>REPORT HAZARD</span>
+            <span>{t.reportTitle}</span>
           </button>
         </div>
       </div>

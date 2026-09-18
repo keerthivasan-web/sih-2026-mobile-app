@@ -33,7 +33,7 @@ export const RerouteModal: React.FC<RerouteModalProps> = ({ isOpen, onClose }) =
               alt_route
             </span>
             <span className="font-sans font-extrabold text-base text-white uppercase tracking-wider">
-              ROUTE COMPARISON
+              {t.yourRoute}
             </span>
           </div>
           <button
@@ -68,13 +68,13 @@ export const RerouteModal: React.FC<RerouteModalProps> = ({ isOpen, onClose }) =
                 {/* CURRENT ROUTE */}
                 <div className="bg-[#1b2028] p-3.5 rounded-xl border border-[#ec6a06]/50 flex flex-col gap-2">
                   <span className="text-[11px] font-mono text-[#bbcabf] uppercase tracking-wider">
-                    CURRENT ROUTE
+                    {t.yourRoute}
                   </span>
 
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="text-base">🔴</span>
                     <span className="text-[13px] font-mono font-extrabold text-[#ffb4ab]">
-                      HIGH RISK
+                      {t.highRisk}
                     </span>
                   </div>
 
@@ -91,13 +91,13 @@ export const RerouteModal: React.FC<RerouteModalProps> = ({ isOpen, onClose }) =
                 {/* SAFER ROUTE */}
                 <div className="bg-[#1b2028] p-3.5 rounded-xl border-2 border-[#10b981] shadow-lg flex flex-col gap-2">
                   <span className="text-[11px] font-mono text-[#4edea3] uppercase tracking-wider font-bold">
-                    SAFER ROUTE
+                    {t.open}
                   </span>
 
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="text-base">🟢</span>
                     <span className="text-[13px] font-mono font-extrabold text-[#4edea3]">
-                      LOW RISK
+                      {t.open}
                     </span>
                   </div>
 
@@ -115,7 +115,7 @@ export const RerouteModal: React.FC<RerouteModalProps> = ({ isOpen, onClose }) =
               {/* Message Box */}
               <div className="bg-[#090e16] p-3 rounded-xl border border-[#252a33] text-center">
                 <p className="text-[14px] text-[#4edea3] font-medium font-sans">
-                  "14 minutes longer, but significantly safer."
+                  {t.saferRouteMessage}
                 </p>
               </div>
 

@@ -28,8 +28,6 @@ const AppContent: React.FC = () => {
         return <RouteScreen />;
       case 'report':
         return <ReportScreen />;
-      case 'shipments':
-        return <ShipmentsScreen />;
       case 'profile':
         return <ProfileScreen />;
       default:
@@ -38,7 +36,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090e16] text-[#dee2ee] flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
       {/* Install PWA Banner */}
       <InstallPwaBanner />
 
@@ -48,12 +46,12 @@ const AppContent: React.FC = () => {
           <div
             className={`p-3 rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-2.5 ${
               toast.type === 'error'
-                ? 'bg-[#93000a]/90 text-[#ffdad6] border-[#ffb4ab]'
+                ? 'bg-rose-600 text-white border-rose-400'
                 : toast.type === 'warning'
-                ? 'bg-[#ec6a06]/90 text-[#ffdbca] border-[#ffb690]'
+                ? 'bg-amber-600 text-white border-amber-400'
                 : toast.type === 'success'
-                ? 'bg-[#003824]/90 text-[#4edea3] border-[#10b981]'
-                : 'bg-[#171c24]/90 text-white border-[#252a33]'
+                ? 'bg-emerald-700 text-white border-emerald-500'
+                : 'bg-slate-800 text-white border-slate-700'
             }`}
           >
             {toast.icon && (
@@ -61,7 +59,7 @@ const AppContent: React.FC = () => {
                 {toast.icon}
               </span>
             )}
-            <span className="text-[12px] font-mono leading-tight font-medium">
+            <span className="text-[13px] font-mono leading-tight font-medium">
               {toast.message}
             </span>
           </div>
@@ -73,10 +71,10 @@ const AppContent: React.FC = () => {
 
       {/* View Mode: Mobile Cab Only */}
       {viewMode === 'mobile' && (
-        <div className="flex-1 flex flex-col relative w-full">
+        <div className="flex-1 flex flex-col relative w-full bg-[#f1f3f9] min-h-screen">
           <TopHeader />
           <RiskAlertModal />
-          <main className="flex-1 flex flex-col pt-10">
+          <main className="flex-1 flex flex-col">
             {renderActiveScreen()}
           </main>
           {isLoggedIn && <BottomNav />}
@@ -85,7 +83,7 @@ const AppContent: React.FC = () => {
 
       {/* View Mode: Web Command Dashboard Only */}
       {viewMode === 'dashboard' && (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-[#090e16] text-[#dee2ee]">
           <TopHeader />
           <WebDashboard />
         </div>
@@ -95,17 +93,17 @@ const AppContent: React.FC = () => {
       {viewMode === 'split' && (
         <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-45px)] overflow-hidden">
           {/* Left: Mobile Cab View in Device Frame */}
-          <div className="w-full lg:w-[480px] shrink-0 h-full overflow-y-auto border-r border-[#1b2028] bg-[#090e16] flex flex-col relative">
+          <div className="w-full lg:w-[460px] shrink-0 h-full overflow-y-auto border-r border-slate-300 bg-[#f1f3f9] flex flex-col relative shadow-inner">
             <TopHeader />
             <RiskAlertModal />
-            <div className="flex-1 flex flex-col pt-10">
+            <div className="flex-1 flex flex-col pb-16">
               {renderActiveScreen()}
             </div>
             {isLoggedIn && <BottomNav />}
           </div>
 
           {/* Right: Central Web Command HQ */}
-          <div className="flex-1 h-full overflow-y-auto flex flex-col">
+          <div className="flex-1 h-full overflow-y-auto flex flex-col bg-[#090e16] text-[#dee2ee]">
             <WebDashboard />
           </div>
         </div>

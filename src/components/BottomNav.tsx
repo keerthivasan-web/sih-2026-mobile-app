@@ -1,47 +1,57 @@
 import React from 'react';
 import { useApp, NavTab } from '../context/AppContext';
+import { TranslationStrings } from '../services/i18n';
 
 export const BottomNav: React.FC = () => {
-  const { activeTab, setActiveTab, pendingCounts, activeAlert } = useApp();
+  const { activeTab, setActiveTab, pendingCounts, activeAlert, t } = useApp();
 
-  const navItems: { id: NavTab; label: string; icon: string; badge?: number | boolean }[] = [
-    { id: 'home', label: 'HOME', icon: 'dashboard' },
-    { id: 'route', label: 'ROUTE', icon: 'navigation', badge: !!activeAlert },
-    { id: 'report', label: 'REPORT', icon: 'warning' },
-    { id: 'shipments', label: 'SHIPMENTS', icon: 'inventory_2' },
-    { id: 'profile', label: 'PROFILE', icon: 'settings_ethernet', badge: pendingCounts.pendingReports > 0 ? pendingCounts.pendingReports : undefined },
+  const navItems: { id: NavTab; labelKey: keyof TranslationStrings; icon: string; badge?: number | boolean }[] = [
+    { id: 'home', labelKey: 'tabHome', icon: 'dashboard' },
+    { id: 'route', labelKey: 'tabRoute', icon: 'navigation', badge: !!activeAlert },
+    { id: 'report', labelKey: 'tabReport', icon: 'confirmation_number' },
+    { id: 'profile', labelKey: 'tabProfile', icon: 'person', badge: pendingCounts.pendingReports > 0 ? pendingCounts.pendingReports : undefined },
   ];
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 pb-safe bg-[#090e16]/95 backdrop-blur-xl border-t border-[#1b2028] shadow-[0_-4px_24px_rgba(0,0,0,0.6)] select-none">
-      <div className="grid grid-cols-5 items-center h-18 px-1 max-w-md mx-auto">
+    <nav className="fixed bottom-3 inset-x-3 z-50 max-w-md mx-auto select-none pointer-events-none">
+      <div className="bg-white/95 backdrop-blur-md rounded-[2.2rem] border border-indigo-50 shadow-[0_12px_32px_rgba(99,102,241,0.15)] px-3 py-2 flex items-center justify-around pointer-events-auto">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
+          const labelText = t[item.labelKey] as string;
+
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center justify-center gap-1 min-h-[52px] py-1 transition-all relative ${
-                isActive ? 'text-[#4edea3] font-bold scale-102' : 'text-[#bbcabf] hover:text-[#dee2ee]'
-              }`}
+              className="relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer p-1"
             >
-              <div className="relative flex items-center justify-center">
-                <span className="material-symbols-outlined text-[26px]">
-                  {item.icon}
-                </span>
-
-                {/* Badge indicator */}
-                {item.badge && (
-                  <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#ec6a06] text-[#dee2ee] text-[9px] font-mono font-bold flex items-center justify-center animate-pulse">
-                    {typeof item.badge === 'number' ? item.badge : '!'}
+              {isActive ? (
+                /* Active Tab: Solid Purple Rounded Badge with Label */
+                <div className="flex flex-col items-center justify-center px-4 py-1.5 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-105 transition-all">
+                  <span className="material-symbols-outlined text-[20px]">
+                    {item.icon}
                   </span>
-                )}
-              </div>
-              <span className="text-[10px] font-mono uppercase tracking-wider leading-none">
-                {item.label}
-              </span>
-              {isActive && (
-                <div className="absolute bottom-1 w-6 h-0.5 rounded-full bg-[#4edea3]" />
+                  <span className="text-[10px] font-bold tracking-tight uppercase leading-tight font-sans">
+                    {labelText}
+                  </span>
+                </div>
+              ) : (
+                /* Inactive Tab: Soft Icon + Label */
+                <div className="flex flex-col items-center justify-center text-indigo-300 hover:text-indigo-600 transition-colors py-1">
+                  <span className="material-symbols-outlined text-[22px]">
+                    {item.icon}
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-tight uppercase leading-tight font-sans">
+                    {labelText}
+                  </span>
+                </div>
+              )}
+
+              {/* Notification Badge Dot */}
+              {item.badge && (
+                <span className="absolute top-0 right-1 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse border-2 border-white">
+                  {typeof item.badge === 'number' ? item.badge : '!'}
+                </span>
               )}
             </button>
           );

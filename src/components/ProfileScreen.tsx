@@ -5,169 +5,106 @@ import { SupportedLanguage } from '../services/i18n';
 export const ProfileScreen: React.FC = () => {
   const {
     driver,
-    pendingCounts,
+    activeShipment,
     isOffline,
     toggleOffline,
-    isSyncing,
-    triggerSync,
+    isGpsAvailable,
+    pendingCounts,
     language,
     setLanguage,
     logout,
+    simulateRoadBlock,
+    simulateFlood,
+    simulateHeavyRain,
+    resetSimulation,
     showToast,
+    fromLocation,
+    toLocation,
     t,
   } = useApp();
 
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
-
-  const handleSyncNow = async () => {
-    setSyncFeedback(null);
-    await triggerSync();
-    if (!isOffline) {
-      setSyncFeedback(t.syncComplete);
-      showToast(t.syncComplete, 'success', 'done_all');
-    } else {
-      showToast('Offline: queued in local storage', 'info', 'cloud_off');
-    }
-  };
+  const [showDemoTools, setShowDemoTools] = useState(false);
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto px-4 py-2 gap-3 pb-28 select-none font-sans">
-      {/* 1. SYNC STATUS Card (Strictly per prompt specification) */}
-      <section className="flex flex-col bg-[#1b2028] rounded-2xl overflow-hidden border-2 border-[#252a33] shadow-xl">
-        {/* Header Bar */}
-        <div className={`p-4 flex items-center justify-between ${isOffline ? 'bg-[#ec6a06]' : 'bg-[#10b981]'}`}>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#002113] text-[24px]">
-              {isOffline ? 'cloud_off' : 'cloud_sync'}
-            </span>
-            <h2 className="text-base font-extrabold text-[#002113] uppercase font-sans tracking-wide">
-              {t.syncStatus}
-            </h2>
-          </div>
-          <button
-            onClick={toggleOffline}
-            className="px-2.5 py-1 rounded bg-[#090e16]/30 text-[#002113] text-[10px] font-mono font-extrabold uppercase"
-          >
-            {isOffline ? 'GO ONLINE' : 'GO OFFLINE'}
-          </button>
+    <div className="flex flex-col w-full max-w-md mx-auto px-4 py-4 gap-4 pb-28 select-none font-sans">
+      {/* 1. Header Card matching sample profile style */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 text-white p-6 rounded-[2rem] shadow-xl flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-white/50 text-white flex items-center justify-center text-3xl font-black shrink-0 shadow-md">
+          {driver.name.charAt(0)}
         </div>
-
-        {/* Sync Spec Breakdown */}
-        <div className="p-4 flex flex-col gap-3">
-          <div className="flex flex-col gap-2.5 bg-[#090e16] p-3.5 rounded-xl border border-[#252a33] text-[13px] font-mono">
-            {/* Connection */}
-            <div className="flex items-center justify-between">
-              <span className="text-[#bbcabf]">{t.connection}</span>
-              <span className={`font-extrabold flex items-center gap-1.5 ${isOffline ? 'text-[#ffb690]' : 'text-[#4edea3]'}`}>
-                <span>{isOffline ? '📴' : '🟢'}</span>
-                <span>{isOffline ? t.offline : t.online}</span>
-              </span>
-            </div>
-
-            {/* Pending Reports */}
-            <div className="flex items-center justify-between border-t border-[#252a33] pt-2">
-              <span className="text-[#bbcabf]">{t.pendingReports}</span>
-              <span className="font-extrabold text-white text-base">
-                {pendingCounts.pendingReports}
-              </span>
-            </div>
-
-            {/* Pending GPS */}
-            <div className="flex items-center justify-between border-t border-[#252a33] pt-2">
-              <span className="text-[#bbcabf]">{t.pendingGps}</span>
-              <span className="font-extrabold text-[#4edea3] text-base">
-                {pendingCounts.pendingGps}
-              </span>
-            </div>
-
-            {/* Pending Photos */}
-            <div className="flex items-center justify-between border-t border-[#252a33] pt-2">
-              <span className="text-[#bbcabf]">{t.pendingPhotos}</span>
-              <span className="font-extrabold text-[#ffb95f] text-base">
-                {pendingCounts.pendingReports}
-              </span>
-            </div>
-
-            {/* Last Sync */}
-            <div className="flex items-center justify-between border-t border-[#252a33] pt-2">
-              <span className="text-[#bbcabf]">{t.lastSync}</span>
-              <span className="text-white font-bold">10:42 AM</span>
-            </div>
-          </div>
-
-          {/* Sync Complete / Syncing banner */}
-          {isSyncing ? (
-            <div className="bg-[#10b981]/20 border border-[#10b981] p-3 rounded-xl flex items-center gap-2 text-[#4edea3] font-mono text-[12px] font-bold animate-pulse">
-              <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
-              <span>{t.syncing}</span>
-            </div>
-          ) : syncFeedback ? (
-            <div className="bg-[#10b981]/20 border border-[#10b981] p-3 rounded-xl flex items-center gap-2 text-[#4edea3] font-mono text-[12px] font-bold">
-              <span className="material-symbols-outlined text-[20px]">check_circle</span>
-              <span>✓ {syncFeedback}</span>
-            </div>
-          ) : null}
-
-          {/* Large [SYNC NOW] Button */}
-          <button
-            onClick={handleSyncNow}
-            disabled={isSyncing}
-            className="w-full h-15 rounded-xl bg-[#10b981] hover:bg-[#4edea3] text-[#002113] font-sans font-extrabold text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-all cursor-pointer disabled:opacity-50"
-          >
-            <span className={`material-symbols-outlined text-[24px] ${isSyncing ? 'animate-spin' : ''}`}>
-              sync
-            </span>
-            <span>{isSyncing ? t.syncing : t.syncNow}</span>
-          </button>
-        </div>
-      </section>
-
-      {/* 2. Driver & Vehicle Profile Details */}
-      <section className="flex flex-col bg-[#1b2028] p-4 rounded-xl border border-[#252a33] gap-3 shadow-md">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-[#bbcabf] uppercase tracking-wider font-bold">
-            {t.driverProfile}
+        <div className="flex flex-col min-w-0">
+          <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
+            Arun Kumar
+          </h2>
+          <span className="text-xs font-bold text-white/90 mt-0.5">
+            Vehicle: TN 52 AB 4521
           </span>
-          <span className="px-2 py-0.5 rounded bg-[#090e16] text-[10px] font-mono text-[#4edea3] font-bold border border-[#252a33]">
-            VERIFIED
+          <span className="text-[11px] text-white/80 font-medium">
+            Phone: +91 98765 43210 • ID: ARUN-2045
           </span>
         </div>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-xl bg-[#090e16] border border-[#252a33] flex items-center justify-center text-2xl font-extrabold text-[#4edea3] shadow">
-            {driver.name.charAt(0)}
-          </div>
+      {/* 2. TRIP STATUS */}
+      <div className="bg-white p-4 rounded-3xl border border-indigo-50 shadow-sm flex flex-col gap-2">
+        <span className="text-xs font-black text-indigo-400 uppercase tracking-wider">
+          TRIP STATUS
+        </span>
+        <div className="flex items-center justify-between bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50">
           <div className="flex flex-col">
-            <h3 className="text-lg font-extrabold text-white uppercase font-sans">
-              {driver.name}
-            </h3>
-            <span className="text-[12px] font-mono text-[#4edea3]">
-              ID: {driver.driverId} • License: {driver.licenseNumber}
+            <span className="text-xs text-slate-500 font-medium">{t.currentDelivery}</span>
+            <span className="text-sm font-black text-indigo-950">
+              💊 {activeShipment.commodity}
             </span>
-            <span className="text-[11px] font-mono text-[#bbcabf] mt-0.5">
-              Assigned: {driver.vehicleId} ({driver.vehicleType})
+            <span className="text-xs font-semibold text-indigo-600 mt-0.5">
+              {fromLocation} → {toLocation}
+            </span>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold uppercase shadow-sm">
+            IN TRANSIT
+          </span>
+        </div>
+      </div>
+
+      {/* 3. APP STATUS */}
+      <div className="bg-white p-4 rounded-3xl border border-indigo-50 shadow-sm flex flex-col gap-2.5">
+        <span className="text-xs font-black text-indigo-400 uppercase tracking-wider">
+          {t.syncStatus}
+        </span>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col items-center">
+            <span className="text-slate-400 font-normal">GPS</span>
+            <span className="text-indigo-600 font-black text-sm mt-0.5">
+              {isGpsAvailable ? 'ON' : 'OFF'}
+            </span>
+          </div>
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col items-center">
+            <span className="text-slate-400 font-normal">{t.connectivity}</span>
+            <span className={isOffline ? 'text-amber-600 font-black text-sm mt-0.5' : 'text-emerald-600 font-black text-sm mt-0.5'}>
+              {isOffline ? t.offline : t.online}
+            </span>
+          </div>
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col items-center">
+            <span className="text-slate-400 font-normal">{t.lastSync}</span>
+            <span className="text-indigo-950 font-black text-sm mt-0.5">
+              {pendingCounts.pendingReports > 0 ? `${pendingCounts.pendingReports} queued` : '13:20'}
             </span>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* 3. MULTILINGUAL Language Selector */}
-      <section className="flex flex-col bg-[#1b2028] p-4 rounded-xl border border-[#252a33] gap-2.5 shadow-md">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-[#bbcabf] uppercase tracking-wider font-bold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-[#4edea3]">translate</span>
-            <span>{t.language}</span>
-          </span>
-          <span className="text-[10px] font-mono text-[#4edea3]">NER LOCALIZATION</span>
-        </div>
-
+      {/* 4. LANGUAGE SELECTOR */}
+      <div className="bg-white p-4 rounded-3xl border border-indigo-50 shadow-sm flex flex-col gap-2.5">
+        <span className="text-xs font-black text-indigo-400 uppercase tracking-wider">
+          {t.language}
+        </span>
         <div className="grid grid-cols-3 gap-2">
           {(
             [
-              { code: 'en', label: 'English', sub: 'Default' },
-              { code: 'hi', label: 'हिन्दी', sub: 'Hindi' },
-              { code: 'as', label: 'অসমীয়া', sub: 'Assamese' },
-            ] as { code: SupportedLanguage; label: string; sub: string }[]
+              { code: 'en', label: 'English' },
+              { code: 'hi', label: 'हिन्दी' },
+              { code: 'as', label: 'অসমীয়া' },
+            ] as { code: SupportedLanguage; label: string }[]
           ).map((lang) => {
             const isSelected = language === lang.code;
             return (
@@ -175,35 +112,95 @@ export const ProfileScreen: React.FC = () => {
                 key={lang.code}
                 onClick={() => {
                   setLanguage(lang.code);
-                  showToast(`Language switched to ${lang.label}`, 'success', 'translate');
+                  showToast(`Language switched to ${lang.label}`, 'success');
                 }}
-                className={`py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 border text-center transition-all cursor-pointer ${
+                className={`py-3 px-2 rounded-2xl text-xs font-extrabold transition-all cursor-pointer border ${
                   isSelected
-                    ? 'bg-[#10b981] text-[#002113] border-[#4edea3] font-bold shadow'
-                    : 'bg-[#171c24] hover:bg-[#252a33] text-white border-[#252a33]'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <span className="text-[13px] font-bold">{lang.label}</span>
-                <span className={`text-[10px] font-mono ${isSelected ? 'text-[#002113]/80' : 'text-[#bbcabf]'}`}>
-                  {lang.sub}
-                </span>
+                {lang.label}
               </button>
             );
           })}
         </div>
-      </section>
+      </div>
 
-      {/* 4. Logout / Switch Operator Button */}
+      {/* 5. LOGOUT */}
       <button
         onClick={() => {
           logout();
-          showToast('Driver logged out. Session locked.', 'info', 'logout');
+          showToast('Driver logged out', 'info');
         }}
-        className="w-full h-13 rounded-xl bg-[#252a33] hover:bg-[#30353e] text-[#ffb4ab] text-[12px] font-mono font-bold uppercase flex items-center justify-center gap-2 border border-[#3c4a42] active:scale-98 transition-all cursor-pointer mt-1"
+        className="w-full h-14 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 border border-rose-200 active:scale-98 transition-all cursor-pointer shadow-xs"
       >
         <span className="material-symbols-outlined text-[20px]">logout</span>
-        <span>{t.logout} / SWITCH OPERATOR</span>
+        <span>{t.logout}</span>
       </button>
+
+      {/* 6. DEVELOPER / DEMO ENTRY */}
+      <div className="mt-2 pt-2 border-t border-slate-200">
+        <button
+          onClick={() => setShowDemoTools(!showDemoTools)}
+          className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1"
+        >
+          <span className="material-symbols-outlined text-[16px]">build</span>
+          <span>{showDemoTools ? 'Hide Developer Demo Tools' : 'Developer / Demo Tools'}</span>
+        </button>
+
+        {showDemoTools && (
+          <div className="mt-2 p-4 bg-slate-900 text-white rounded-3xl border border-slate-800 flex flex-col gap-3 animate-in fade-in duration-200">
+            <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">
+              DEMO SIMULATION CONTROLS
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono font-bold">
+              <button
+                onClick={() => {
+                  simulateRoadBlock();
+                }}
+                className="p-3 rounded-2xl bg-rose-950 text-rose-300 border border-rose-800 hover:bg-rose-900 active:scale-95 transition-all text-left"
+              >
+                Simulate Landslide
+              </button>
+              <button
+                onClick={() => {
+                  simulateFlood();
+                }}
+                className="p-3 rounded-2xl bg-sky-950 text-sky-300 border border-sky-800 hover:bg-sky-900 active:scale-95 transition-all text-left"
+              >
+                Simulate Flood
+              </button>
+              <button
+                onClick={() => {
+                  simulateHeavyRain();
+                }}
+                className="p-3 rounded-2xl bg-amber-950 text-amber-300 border border-amber-800 hover:bg-amber-900 active:scale-95 transition-all text-left"
+              >
+                Simulate Heavy Rain
+              </button>
+              <button
+                onClick={() => {
+                  toggleOffline();
+                }}
+                className={`p-3 rounded-2xl border active:scale-95 transition-all text-left ${
+                  isOffline
+                    ? 'bg-amber-600 text-white border-amber-500'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {isOffline ? 'Simulate Online' : 'Simulate Offline'}
+              </button>
+            </div>
+            <button
+              onClick={resetSimulation}
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl text-xs font-mono font-bold border border-slate-700"
+            >
+              Reset Demo
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

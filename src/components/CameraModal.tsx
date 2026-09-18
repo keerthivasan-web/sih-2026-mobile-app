@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useApp } from '../context/AppContext';
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -17,17 +18,17 @@ interface CameraModalProps {
 const TACTICAL_PRESETS = [
   {
     id: 'rockfall',
-    label: 'Mountain Rockfall Debris',
+    labelKey: 'presetRockfall' as const,
     url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD-mOIg44pcTCA8CwyjR7dvwrrh2pT34C-L2GzMuvMXFqGnrx_oPIOqMHco4o7pkv3ry-5ABMFqatma37oA4Bs-YU0yJJ1_z-UEIQLdj_jVLU6_ErUz1mTzclcPlvubOsxqV-nqUKgPKtqU8xqtvd_vKozR5P4QfilV2UZpsPPlbtI2LAxmGHPsKvGl5YN4S23ULAzLKj61LUb5z27NSKm23AxkGvk0NJA7loBI77WK5Z77iBCAx0geZA',
   },
   {
     id: 'flood',
-    label: 'Flooded Culvert Overflow',
+    labelKey: 'presetFlood' as const,
     url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeoX-auHZ7vu1v2JfNhbEITlSNm4h31BQSvPMPxmB88wktIqr7FQCbemkNlIbBhaMGPShCbU9Jys-kxbv57cgf_14rq5OkCYoSWiXa7AM0fji39-iZw3a-mZeMdF4BC9BT-W2-j3gXX_sAeci86str89pLeCJ1dU-3LJFXMkgYe8nEWascb3wZkKZo-7-AQpB2gfGikecMSyNmCbFoJYFRyzlLqmJqU0vc1WZ2Vngd_koor6-1EEHU-g',
   },
   {
     id: 'cones',
-    label: 'Road Hazard Obstruction',
+    labelKey: 'presetCones' as const,
     url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcRGyiNav-ABfXKfVB5Ynw5MZLHB4_zoUlj8l6inYrwURYEOTG64rYYGZT1BeMr4QL7Jb-eFHQdgEWoCJTDsd0EwtWg0cZD8qunO7Q7-kly99my8klhwJXK09dz7Q6aww6B1Vhm3UWHwJfj2mpCYakeBURzrY8BUyEmg7T0at7uxoKgXsZP6IUQ_Y2_cRaYhLpAkL1ma-v0wac4zlasV-gW1ZHKJ-zANgHXoGjPZTIB-Au1YLLFYOamw',
   },
 ];
@@ -38,10 +39,11 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   onPhotoCaptured,
   metadata,
 }) => {
+  const { t } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -115,7 +117,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ec6a06] animate-pulse" />
           <span className="text-[12px] font-mono text-white uppercase font-bold">
-            RAW CAMERA VIEWFINDER • 1080P
+            {t.cameraViewfinder}
           </span>
         </div>
         <button
@@ -141,10 +143,10 @@ export const CameraModal: React.FC<CameraModalProps> = ({
               photo_camera
             </span>
             <span className="text-[13px] font-mono text-white uppercase font-bold">
-              OPTICAL SENSOR SIMULATOR READY
+              {t.sensorSimulatorReady}
             </span>
             <p className="text-[12px] text-[#bbcabf] max-w-xs leading-relaxed">
-              Select a field hazard preset capture below or upload a custom image. EXIF telemetry will be dynamically authenticated and stamped.
+              {t.sensorSimulatorSubtext}
             </p>
           </div>
         )}
@@ -174,7 +176,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
       {/* Preset selector bar */}
       <div className="flex flex-col gap-2">
         <span className="text-[10px] font-mono text-[#bbcabf] uppercase tracking-wider">
-          TACTICAL HAZARD PRESETS (FIELD CAMERA SHOTS)
+          {t.tacticalPresetsTitle}
         </span>
         <div className="grid grid-cols-3 gap-2">
           {TACTICAL_PRESETS.map((preset) => (
@@ -187,10 +189,10 @@ export const CameraModal: React.FC<CameraModalProps> = ({
               className="h-14 rounded-lg bg-[#1b2028] hover:bg-[#252a33] p-1 border border-[#252a33] text-left flex flex-col justify-between active:scale-95 transition-transform"
             >
               <span className="text-[10px] font-mono text-[#4edea3] font-bold truncate">
-                {preset.label}
+                {t[preset.labelKey]}
               </span>
               <span className="text-[9px] font-mono text-[#bbcabf]">
-                USE PRESET →
+                {t.usePreset}
               </span>
             </button>
           ))}
@@ -204,12 +206,12 @@ export const CameraModal: React.FC<CameraModalProps> = ({
               className="h-14 rounded-xl bg-[#10b981] hover:bg-[#4edea3] text-[#002113] text-[13px] font-mono uppercase font-extrabold flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-transform"
             >
               <span className="material-symbols-outlined text-[24px]">camera</span>
-              CAPTURE FRAME
+              {t.captureFrame}
             </button>
           ) : (
             <label className="h-14 rounded-xl bg-[#10b981] hover:bg-[#4edea3] text-[#002113] text-[13px] font-mono uppercase font-extrabold flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-transform cursor-pointer">
               <span className="material-symbols-outlined text-[24px]">upload_file</span>
-              UPLOAD PHOTO
+              {t.uploadPhoto}
               <input
                 type="file"
                 accept="image/*"
@@ -230,7 +232,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
             <span className="material-symbols-outlined text-[20px] text-[#ffb95f]">
               verified
             </span>
-            USE VERIFIED SHOT
+            {t.useVerifiedShot}
           </button>
         </div>
       </div>
