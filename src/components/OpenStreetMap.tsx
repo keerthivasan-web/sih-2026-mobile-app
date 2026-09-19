@@ -24,6 +24,7 @@ interface OpenStreetMapProps {
   };
   onMarkerClick?: (hazard: any) => void;
   onRouteSelect?: (routeType: RouteTypeOption) => void;
+  onRecenter?: () => void;
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export const OpenStreetMap: React.FC<OpenStreetMapProps> = ({
   currentGps,
   onMarkerClick,
   onRouteSelect,
+  onRecenter,
   className = '',
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,21 @@ export const OpenStreetMap: React.FC<OpenStreetMapProps> = ({
   const markersRef = useRef<L.Marker[]>([]);
 
   const [mapStyle, setMapStyle] = useState<'osm' | 'dark' | 'satellite'>('osm');
+
+  const handleZoomIn = () => {
+    mapInstanceRef.current?.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    mapInstanceRef.current?.zoomOut();
+  };
+
+  const handleRecenter = () => {
+    const lat = currentGps?.latitude || center[0];
+    const lng = currentGps?.longitude || center[1];
+    mapInstanceRef.current?.flyTo([lat, lng], 14, { animate: true });
+    if (onRecenter) onRecenter();
+  };
 
   const tileUrls = {
     osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -101,8 +118,6 @@ export const OpenStreetMap: React.FC<OpenStreetMapProps> = ({
         zoomControl: false,
         attributionControl: false,
       });
-
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       const initialLayer = L.tileLayer(tileUrls.osm, {
         maxZoom: 19,
@@ -287,74 +302,104 @@ export const OpenStreetMap: React.FC<OpenStreetMapProps> = ({
     <div className={`relative rounded-2xl overflow-hidden border border-slate-200 shadow-md ${className}`} style={{ height }}>
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Style Toggle Bar */}
-      <div className="absolute top-2 right-2 z-10 flex items-center bg-white/90 backdrop-blur-xs border border-slate-200 p-1 rounded-lg text-xs font-bold shadow-sm">
+      {/* Style Toggle Bar (Compact & Small) */}
+      <div className="absolute top-2 right-2 z-10 flex items-center bg-white/95 backdrop-blur-xs border border-slate-200 p-0.5 rounded-lg text-[10px] font-bold shadow-xs">
         <button
           onClick={() => setMapStyle('osm')}
-          className={`px-2.5 py-1 rounded-md transition-colors ${
-            mapStyle === 'osm' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+          className={`px-1.5 py-0.5 rounded transition-colors ${
+            mapStyle === 'osm' ? 'bg-indigo-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          LIGHT MAP
+          LIGHT
         </button>
         <button
           onClick={() => setMapStyle('dark')}
-          className={`px-2.5 py-1 rounded-md transition-colors ${
-            mapStyle === 'dark' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+          className={`px-1.5 py-0.5 rounded transition-colors ${
+            mapStyle === 'dark' ? 'bg-indigo-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          DARK MAP
+          DARK
         </button>
         <button
           onClick={() => setMapStyle('satellite')}
-          className={`px-2.5 py-1 rounded-md transition-colors ${
-            mapStyle === 'satellite' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+          className={`px-1.5 py-0.5 rounded transition-colors ${
+            mapStyle === 'satellite' ? 'bg-indigo-600 text-white font-black' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           SATELLITE
         </button>
       </div>
 
+      {/* Stacked Map Controls (Recenter ON TOP of Zoom In / Zoom Out) */}
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col items-center gap-1.5">
+        {/* Recenter Button on Top */}
+        <button
+          onClick={handleRecenter}
+          title="Recenter on Vehicle"
+          className="w-9 h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center shadow-lg active:scale-95 transition-all cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">my_location</span>
+        </button>
+
+        {/* Zoom In & Zoom Out Buttons */}
+        <div className="flex flex-col rounded-xl bg-white/95 backdrop-blur-xs border border-slate-200 shadow-md overflow-hidden text-slate-800 font-bold">
+          <button
+            onClick={handleZoomIn}
+            title="Zoom In"
+            className="w-8 h-8 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-slate-100 text-base active:bg-slate-100 cursor-pointer"
+          >
+            +
+          </button>
+          <button
+            onClick={handleZoomOut}
+            title="Zoom Out"
+            className="w-8 h-8 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-base active:bg-slate-100 cursor-pointer"
+          >
+            −
+          </button>
+        </div>
+      </div>
+
       {/* Interactive 3 Suggested Routes Overlay Badges */}
-      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5 max-w-[210px]">
+      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 max-w-[190px]">
         <button
           onClick={() => onRouteSelect?.('PRIMARY')}
-          className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black uppercase flex items-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer ${
+          className={`px-2 py-1 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1 shadow-xs transition-transform active:scale-95 cursor-pointer ${
             currentSelected === 'PRIMARY'
               ? 'bg-emerald-600 text-white border-emerald-700 ring-2 ring-emerald-300'
               : 'bg-white/95 text-emerald-800 border-emerald-200 hover:bg-emerald-50'
           }`}
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           <span className="truncate">R1: Valley (180 km)</span>
         </button>
 
         <button
           onClick={() => onRouteSelect?.('ALTERNATIVE')}
-          className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black uppercase flex items-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer ${
+          className={`px-2 py-1 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1 shadow-xs transition-transform active:scale-95 cursor-pointer ${
             currentSelected === 'ALTERNATIVE'
               ? 'bg-blue-600 text-white border-blue-700 ring-2 ring-blue-300'
               : 'bg-white/95 text-blue-800 border-blue-200 hover:bg-blue-50'
           }`}
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
           <span className="truncate">R2: East Pass (195 km)</span>
         </button>
 
         <button
           onClick={() => onRouteSelect?.('WEST_RIDGE')}
-          className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black uppercase flex items-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer ${
+          className={`px-2 py-1 rounded-lg border text-[10px] font-black uppercase flex items-center gap-1 shadow-xs transition-transform active:scale-95 cursor-pointer ${
             currentSelected === 'WEST_RIDGE'
               ? 'bg-purple-600 text-white border-purple-700 ring-2 ring-purple-300'
               : 'bg-white/95 text-purple-800 border-purple-200 hover:bg-purple-50'
           }`}
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
           <span className="truncate">R3: West Ridge (210 km)</span>
         </button>
       </div>
 
-      <div className="absolute bottom-1 left-2 z-10 text-[10px] text-slate-700 bg-white/90 px-2 py-1 rounded-lg border border-slate-200 backdrop-blur-xs font-bold shadow-xs">
+      <div className="absolute bottom-1 left-2 z-10 text-[9px] text-slate-700 bg-white/90 px-1.5 py-0.5 rounded-md border border-slate-200 backdrop-blur-xs font-bold shadow-xs">
         💡 Click on any of the 3 route lines or buttons to switch route
       </div>
     </div>

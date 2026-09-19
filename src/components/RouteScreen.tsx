@@ -36,17 +36,17 @@ export const RouteScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full max-w-md mx-auto select-none font-sans relative pb-28 min-h-[calc(100vh-60px)]">
-      {/* 1. FLOATING TOP SEARCH / DESTINATION HEADER OVER MAP */}
-      <div className="absolute top-3 inset-x-3 z-20 flex items-center gap-2">
+      {/* 1. TOP SEARCH / DESTINATION HEADER (OUTSIDE OF THE MAP) */}
+      <div className="p-3 flex items-center gap-2 bg-[#f1f3f9]">
         <button
           onClick={() => setActiveTab('home')}
-          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-lg border border-indigo-50 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer"
+          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-sm border border-indigo-100 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[20px]">arrow_back</span>
         </button>
 
         {/* Search / Destination Input Bar */}
-        <div className="flex-1 bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-indigo-50/80 px-3.5 py-2 flex items-center justify-between gap-2 text-slate-800">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-indigo-100 px-3.5 py-2 flex items-center justify-between gap-2 text-slate-800">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider">{t.destination}:</span>
             <span className="text-xs font-black text-slate-900 truncate">{toLocation} ({routeMetrics.currentDistanceKm} km)</span>
@@ -57,7 +57,7 @@ export const RouteScreen: React.FC = () => {
         {/* Bell Icon */}
         <button
           onClick={() => setActiveTab('profile')}
-          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-lg border border-indigo-50 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer relative"
+          className="w-10 h-10 rounded-full bg-white text-indigo-950 flex items-center justify-center shadow-sm border border-indigo-100 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer relative"
         >
           <span className="material-symbols-outlined text-[20px]">notifications</span>
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500" />
@@ -65,7 +65,7 @@ export const RouteScreen: React.FC = () => {
       </div>
 
       {/* 2. FULL-SCREEN INTERACTIVE MAP WITH DIRECT POLYLINE CLICK REROUTING */}
-      <div className="relative w-full h-[380px]">
+      <div className="relative w-full h-[380px] px-3">
         <OpenStreetMap
           height="380px"
           isRerouted={isRerouted}
@@ -92,6 +92,7 @@ export const RouteScreen: React.FC = () => {
               severity: 'BLOCKED',
             })
           }
+          onRecenter={() => showToast('GPS Re-centered on Vehicle', 'info')}
         />
 
         {/* Floating Map Action Buttons */}
@@ -107,15 +108,6 @@ export const RouteScreen: React.FC = () => {
             className="w-10 h-10 rounded-full bg-white text-indigo-600 flex items-center justify-center shadow-lg border border-slate-100 hover:scale-105 transition-transform cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">share</span>
-          </button>
-        </div>
-
-        <div className="absolute bottom-6 right-3 z-10">
-          <button
-            onClick={() => showToast('GPS Re-centered on Vehicle', 'info')}
-            className="w-11 h-11 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[22px]">my_location</span>
           </button>
         </div>
       </div>

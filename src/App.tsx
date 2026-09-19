@@ -3,7 +3,6 @@ import { AppProvider, useApp } from './context/AppContext';
 import { TopHeader } from './components/TopHeader';
 import { BottomNav } from './components/BottomNav';
 import { RiskAlertModal } from './components/RiskAlertModal';
-import { DemoBar } from './components/DemoBar';
 import { LoginScreen } from './components/LoginScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { RouteScreen } from './components/RouteScreen';
@@ -65,9 +64,6 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Persistent Demo Bar across all modes */}
-      <DemoBar />
 
       {/* View Mode: Mobile Cab Only */}
       {viewMode === 'mobile' && (
